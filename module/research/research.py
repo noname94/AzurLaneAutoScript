@@ -10,6 +10,9 @@ from module.research.assets import *
 from module.research.project import ResearchSelector
 from module.ui.page import *
 
+import time
+from datetime import datetime
+
 RESEARCH_ENTRANCE = [ENTRANCE_1, ENTRANCE_2, ENTRANCE_3, ENTRANCE_4, ENTRANCE_5]
 RESEARCH_STATUS = [STATUS_1, STATUS_2, STATUS_3, STATUS_4, STATUS_5]
 
@@ -197,6 +200,8 @@ class RewardResearch(ResearchSelector):
         """
         logger.info(f'Research project: {index}')
         click_timer = Timer(10)
+        # Sleep for debug, should be removed afterwards.
+        time.sleep(5)
         while 1:
             if skip_first_screenshot:
                 skip_first_screenshot = False
@@ -299,6 +304,90 @@ class RewardResearch(ResearchSelector):
         self.config.SCREEN_SHOT_SAVE_FOLDER = backup
         self.device.screenshot_interval_set(0.1)
 
+    @Config.when(SERVER='jp')
+    def research_reward(self):
+        """
+        Receive research reward and start new research.
+        Unable to detect research is running.
+
+        Pages:
+            in: page_research, stable.
+            out: page_research, has research project information, but it's still page_research.
+        """
+        logger.hr('Research start')
+        if self.research_has_finished():
+            self.research_receive(save_get_items=self.config.ENABLE_SAVE_GET_ITEMS)
+        else:
+            logger.info('No research has finished')
+
+        self._research_project_offset = 3
+        for _ in range(2):
+            self.research_detect_jp(self.research_scan_jp())
+            priority = self.research_sort_filter()
+            '''
+            All done and we are back to page_research.
+            Take a screenshot at page_research for futher use.
+            '''
+            self.device.screenshot()
+            result = self.research_select(priority, save_get_items=self.config.ENABLE_SAVE_GET_ITEMS)
+            if result:
+                break
+
+    def research_scan_jp(self, skip_first_screenshot=True):
+        """
+        Returns:
+            list of research detail screenshots(Image).
+        """
+        click_timer = Timer(1)
+        images = []
+        while 1:
+            if skip_first_screenshot:
+                skip_first_screenshot = False
+            else:
+                self.device.screenshot()
+
+            if not click_timer.reached():
+                continue
+            if not self.appear(DETAIL_NEXT, offset=(20, 20)):
+                '''
+                Enter the middle entrance first.
+                '''
+                self.device.click(RESEARCH_ENTRANCE[2])
+                '''
+                Check first STABLE_CHECKER_DETAIL then RESEARCH_COST_CHECKER 
+                to ensure that the research detail page is fully loaded.
+                '''
+                self.wait_until_stable(STABLE_CHECKER_DETAIL)
+                self.wait_until_appear(RESEARCH_COST_CHECKER, offset=5, skip_first_screenshot=False)
+                click_timer.reset()
+                continue
+            
+            images.append(self.device.image)
+            '''
+            Click DETAIL_NEXT once more such that page_research remain the same as before.
+            '''
+            self.appear_then_click(DETAIL_NEXT, offset=(20, 20), interval=0.1)
+            self.wait_until_stable(STABLE_CHECKER_DETAIL)
+            self.wait_until_appear(RESEARCH_COST_CHECKER, offset=5, skip_first_screenshot=False)
+            click_timer.reset()
+
+            if len(images) >= 5:
+                '''
+                We entered the middle entrance first, 
+                so the index from left to right is (3, 4, 0, 1, 2).
+                In other words, we are at offset 3 now.
+                '''
+                self._research_project_offset = 3
+                
+                self.device.click(RESEARCH_SELECT_QUIT)
+                self.ensure_research_stable()
+                #for _ in range(5):
+                #    image_time = datetime.now().strftime('%Y-%m-%d_%H-%M-%S-%f')
+                #    images[_].save(f'./log/{image_time}_{_}.png')
+                return images
+
+                
+    @Config.when(SERVER=None)
     def research_reward(self):
         """
         Receive research reward and start new research.
