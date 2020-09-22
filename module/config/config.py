@@ -299,6 +299,12 @@ class AzurLaneConfig:
     SCREEN_SIZE = (1280, 720)
     DETECTING_AREA = (123, 55, 1280, 720)
     SCREEN_CENTER = (SCREEN_SIZE[0] / 2, SCREEN_SIZE[1] / 2)
+    if server.server != 'jp':
+        FOCUS_CENTER = SCREEN_CENTER
+    else:
+        FOCUS_CENTER = (SCREEN_CENTER[0], SCREEN_CENTER[1] + 62)
+    #if server.server == 'jp':
+    #    SCREEN_CENTER = (SCREEN_CENTER[0], SCREEN_CENTER[1] + 62)
     MID_Y = SCREEN_CENTER[1]
     DETECTION_BACKEND = 'homography'
     # In event_20200723_cn B3D3, Grid have 1.2x width, images on the grid still remain the same.

@@ -1,5 +1,6 @@
 import numpy as np
 
+import module.config.server as server
 from module.exception import MapDetectionError, CampaignEnd
 from module.handler.assets import IN_MAP
 from module.logger import logger
@@ -264,6 +265,8 @@ class Camera(MapOperation):
         if sight is None:
             sight = self.map.camera_sight
 
+        if server.server == 'jp':
+            sight = (sight[0], sight[1]-1, sight[2], sight[3]-1)
         diff = np.array(location) - self.camera
         if diff[1] > sight[3]:
             y = diff[1] - sight[3]

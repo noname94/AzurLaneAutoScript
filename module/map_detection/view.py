@@ -62,13 +62,13 @@ class View(MapDetector):
 
         # Find local view center
         for loca, grid in self.grids.items():
-            offset = grid.screen2grid([self.config.SCREEN_CENTER])[0].astype(int)
+            offset = grid.screen2grid([self.config.FOCUS_CENTER])[0].astype(int)
             points = grid.grid2screen(np.add([[0.5, 0], [-0.5, 0], [0, 0.5], [0, -0.5]], offset))
             self.swipe_base = np.array([np.linalg.norm(points[0] - points[1]), np.linalg.norm(points[2] - points[3])])
             self.center_loca = tuple(np.add(loca, offset).tolist())
             logger.attr_align('center_loca', self.center_loca)
             if self.center_loca in self:
-                self.center_offset = self.grids[self.center_loca].screen2grid([self.config.SCREEN_CENTER])[0]
+                self.center_offset = self.grids[self.center_loca].screen2grid([self.config.FOCUS_CENTER])[0]
             else:
                 x = max(self.center_loca[0] - self.shape[0], 0) if self.center_loca[0] > 0 else self.center_loca[0]
                 y = max(self.center_loca[1] - self.shape[1], 0) if self.center_loca[1] > 0 else self.center_loca[1]

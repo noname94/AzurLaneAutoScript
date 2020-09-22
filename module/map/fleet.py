@@ -76,7 +76,7 @@ class Fleet(Camera, AmbushHandler):
     def fleet_switch(self):
         self.fleet_switch_click()
         self.fleet_current_index = 1 if self.fleet_current_index == 2 else 2
-        if server.server == 'jp':
+        if server.server == 'null':
             # [JP] After fleet switch, camera don't focus on fleet, but about 0.75 grids higher than grid center.
             # So need to correct camera position.
             self.ensure_edge_insight()
