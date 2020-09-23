@@ -76,13 +76,8 @@ class Fleet(Camera, AmbushHandler):
     def fleet_switch(self):
         self.fleet_switch_click()
         self.fleet_current_index = 1 if self.fleet_current_index == 2 else 2
-        if server.server == 'jp':
-            # [JP] After fleet switch, camera don't focus on fleet, but about 0.75 grids higher than grid center.
-            # So need to correct camera position.
-            self.ensure_edge_insight()
-        else:
-            self.camera = self.fleet_current
-            self.update()
+        self.camera = self.fleet_current
+        self.update()
         self.find_path_initial()
         self.map.show_cost()
         self.show_fleet()
@@ -551,6 +546,15 @@ class Fleet(Camera, AmbushHandler):
             wall=self.config.MAP_HAS_WALL,
             portal=self.config.MAP_HAS_PORTAL,
         )
+        # [JP] Focus center in JP server is about 0.67 grids lower than screen center.
+        # Adjust camera_sight to fit this.
+        if server.server == 'jp':
+            sight = list(self.map.camera_sight)
+            if sight[1] > -2:
+                sight[1] -= 1
+            if sight[3] > 1:
+                sight[3] -= 1
+            self.map.camera_sight = tuple(sight)
 
         self.handle_strategy(index=1 if not self.fleets_reversed() else 2)
         self.update()
